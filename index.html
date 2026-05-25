@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🎱 Lucky Snooker Club</title>
+<style>
+:root {
+  --green: #1a6b3c; --green-light: #2d8a52; --green-dark: #0f4a28;
+  --gold: #c9a227; --gold-light: #e8c347;
+  --bg: #0a1a0f; --bg-card: #0f2418; --bg-surface: #162d1e;
+  --text: #e8f5ed; --text-muted: #7aab8a; --border: rgba(45,138,82,0.3);
+  --red: #e24b4a; --amber: #ef9f27;
+  --radius: 12px; --radius-sm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:15px;min-height:600px}
+
+/* LOGIN */
+.login-screen{min-height:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse at 50% 0%,#1a3d22 0%,var(--bg) 70%)}
+.login-logo{font-size:48px;margin-bottom:8px;text-align:center}
+.login-title{font-size:22px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:4px;text-align:center}
+.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:2rem;text-align:center}
+.login-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:320px}
+.form-group{margin-bottom:1rem}
+.form-label{font-size:13px;color:var(--text-muted);margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;color:var(--text);font-size:15px;outline:none}
+.form-input:focus{border-color:var(--green-light)}
+.btn-primary{width:100%;background:var(--green);border:none;border-radius:var(--radius-sm);padding:14px;color:white;font-size:16px;font-weight:600;cursor:pointer;margin-top:0.5rem}
+.btn-primary:active{background:var(--green-dark)}
+.login-error{color:var(--red);font-size:13px;text-align:center;margin-top:8px;min-height:20px}
+
+/* APP */
+.app-screen{display:flex;flex-direction:column;min-height:600px}
+.navbar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.navbar-title{font-size:15px;font-weight:700;color:var(--gold)}
+.navbar-user{font-size:11px;color:var(--text-muted);text-align:right}
+.navbar-user b{display:block;font-size:13px;color:var(--text);font-weight:600}
+.logout-btn{color:var(--red);font-size:11px;cursor:pointer;border:none;background:none;padding:0}
+.tabbar{display:flex;background:var(--bg-card);border-top:1px solid var(--border);flex-shrink:0}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:10px;color:var(--text-muted);cursor:pointer;border:none;background:none;gap:3px}
+.tab-item.active{color:var(--green-light)}
+.tab-icon{font-size:18px}
+.page-content{flex:1;overflow-y:auto;padding:14px}
+
+/* TABLE GRID */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-title{font-size:16px;font-weight:700}
+.btn-sm{background:var(--green);border:none;border-radius:var(--radius-sm);padding:7px 12px;color:white;font-size:13px;font-weight:600;cursor:pointer}
+.btn-danger{background:var(--red)}
+.tables-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.table-card{background:var(--bg-card);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px;cursor:pointer;position:relative;overflow:hidden}
+.table-card.active{border-color:var(--amber)}
+.table-card.active::before,.table-card.vacant::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.table-card.active::before{background:var(--amber)}
+.table-card.vacant::before{background:var(--green)}
+.table-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.status-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;margin-bottom:6px}
+.badge-vacant{background:rgba(26,107,60,0.25);color:#5dca9f}
+.badge-active{background:rgba(239,159,39,0.2);color:var(--amber)}
+.table-timer{font-size:18px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums}
+.table-amount{font-size:12px;color:var(--gold);font-weight:600}
+.table-info{font-size:11px;color:var(--text-muted)}
+
+/* MEMBER BADGE */
+.mb{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700}
+.mb-walkin{background:rgba(136,135,128,0.3);color:#b4b2a9}
+.mb-regular{background:rgba(59,109,17,0.3);color:#97c459}
+.mb-vip{background:rgba(186,117,23,0.3);color:#e8c347}
+.mb-supervip{background:rgba(83,74,183,0.3);color:#afa9ec}
+.mb-admin{background:rgba(162,45,45,0.3);color:#f09595}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;display:flex;align-items:flex-end}
+.modal-box{background:var(--bg-card);border-radius:20px 20px 0 0;padding:18px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.modal-title{font-size:17px;font-weight:700;color:var(--gold);margin-bottom:14px}
+.modal-close{float:right;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;margin-top:-4px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-label{color:var(--text-muted)}
+.info-value{font-weight:600}
+
+/* MENU */
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}
+.menu-item{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;cursor:pointer;user-select:none}
+.menu-item:active{opacity:0.7}
+.menu-item-name{font-size:12px;font-weight:600}
+.menu-item-price{font-size:11px;color:var(--gold);margin-top:2px}
+
+/* ORDERS */
+.order-list{background:var(--bg-surface);border-radius:var(--radius-sm);padding:10px;margin:8px 0}
+.order-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px}
+.btn-remove{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0 4px}
+
+/* SUMMARY */
+.summary-box{background:var(--bg-surface);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:12px;margin:10px 0}
+.sum-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+.sum-total{font-size:17px;font-weight:700;color:var(--gold)}
+
+/* SETTINGS */
+.set-group{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.set-title{font-size:11px;color:var(--text-muted);padding:10px 14px 4px;text-transform:uppercase;letter-spacing:.5px}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px}
+.set-row:last-child{border-bottom:none}
+.set-input{background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;padding:5px 9px;color:var(--text);font-size:13px;width:80px;text-align:right}
+
+/* LIST */
+.list-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.li-info{flex:1}
+.li-name{font-size:13px;font-weight:600}
+.li-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* HISTORY */
+.hist-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px;margin-bottom:8px}
+.hist-head{display:flex;justify-content:space-between;margin-bottom:4px}
+.hist-amt{font-size:14px;font-weight:700;color:var(--gold)}
+
+/* SYNC BAR */
+.sync-bar{background:rgba(45,138,82,0.1);border:1px solid rgba(45,138,82,0.3);border-radius:var(--radius-sm);padding:7px 12px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green-light);animation:pulse 2s infinite}
+.sync-dot.error{background:var(--red);animation:none}
+.sync-dot.loading{background:var(--amber)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-row{display:flex;gap:8px;margin-top:12px}
+.btn-row>button{flex:1}
+.empty{text-align:center;padding:2rem;color:var(--text-muted);font-size:13px}
+
+/* TOAST */
+#toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;z-index:9999;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.5);border:1px solid var(--green-light)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="toast"></div>
+
+<script>
+// ====================================================
+// ⚙️ CONFIG — ใส่ URL ของ Apps Script ที่ Deploy แล้ว
+// ====================================================
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJ5oKn4T85zzJPPkiF-Y81TqS90pqGJ5D0vsiBORjehf9guZywH_h4W93LigMd-48cUg/exec";
+
+// ====================================================
+// 📦 ข้อมูลเริ่มต้น (Fallback ใช้ตอนออฟไลน์)
+// ====================================================
+var D = {
+  user: null,
+  page: 'tables',
+  modal: null,
+  timerID: null,
+  syncStatus: 'idle', // idle | loading | ok | error
+
+  users: [
+    {id:1, username:'admin',    password:'1234', name:'ผู้ดูแลระบบ',        role:'admin'},
+    {id:2, username:'staff1',   password:'1111', name:'พนักงาน 1',           role:'staff'},
+    {id:3, username:'miggelza', password:'1111', name:'เจ้าของร้านนอนน้อย',  role:'admin'},
+  ],
+
+  discounts: {walkin:0, regular:5, vip:10, supervip:15},
+  rate: 120,
+  members: [{id:1, name:'ลูกค้าทั่วไป', phone:'', level:'walkin', visits:0}],
+  tables: [
+    {id:1, name:'โต๊ะ 1', status:'vacant', start:null, memberId:1, orders:[]},
+    {id:2, name:'โต๊ะ 2', status:'vacant', start:null, memberId:1, orders:[]},
+    {id:3, name:'โต๊ะ 3', status:'vacant', start:null, memberId:1, orders:[]},
+    {id:4, name:'โต๊ะ 4', status:'vacant', start:null, memberId:1, orders:[]},
+  ],
+  menu: [
+    {id:1, name:'น้ำเปล่า',    price:10, cat:'drink'},
+    {id:2, name:'โค้ก/เป๊ปซี่', price:20, cat:'drink'},
+    {id:3, name:'มาม่า',       price:20, cat:'snack'},
+  ],
+  history: [],
+};
+
+// ====================================================
+// 🌐 CLOUD SYNC — แก้ไขใหม่ให้ใช้งานได้จริง
+// ====================================================
+
+/**
+ * ดึงข้อมูลทั้งหมดจาก Google Sheets
+ * ใช้ fetch GET พร้อม ?action=readAll
+ * วิธีแก้ CORS: Apps Script ต้อง Deploy แบบ "Anyone" (ดู Apps Script ด้านล่าง)
+ */
+function loadDataFromSheets() {
+  if (!SCRIPT_URL) return;
+  setSyncStatus('loading');
+
+  // ✅ แก้ไข: เพิ่ม timestamp เพื่อป้องกัน browser cache
+  var url = SCRIPT_URL + "?action=readAll&_t=" + Date.now();
+
+  fetch(url, {
+    method: "GET",
+    redirect: "follow"   // ✅ แก้ไข: ต้องใส่เพราะ Apps Script redirect ก่อนตอบ
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  })
+  .then(function(cloud) {
+    if (!cloud || cloud.status === "error") throw new Error(cloud ? cloud.message : "ไม่มีข้อมูล");
+
+    // อัปเดตข้อมูลจากคลาวด์ — ป้องกันทับข้อมูลเปล่า
+    if (cloud.members  && cloud.members.length  > 0) D.members   = cloud.members;
+    if (cloud.menu     && cloud.menu.length     > 0) D.menu      = cloud.menu;
+    if (cloud.history)                                D.history   = cloud.history;
+    if (cloud.rate)                                   D.rate      = Number(cloud.rate);
+    if (cloud.discounts && typeof cloud.discounts === 'object') D.discounts = cloud.discounts;
+
+    // อัปเดตสถานะโต๊ะจากคลาวด์
+    if (cloud.tables && cloud.tables.length > 0) {
+      cloud.tables.forEach(function(ct) {
+        var lt = D.tables.find(function(t) { return String(t.id) === String(ct.id); });
+        if (lt) {
+          lt.status   = ct.status   || 'vacant';
+          lt.start    = ct.start    ? Number(ct.start) : null;
+          lt.memberId = ct.memberId ? Number(ct.memberId) : 1;
+          lt.orders   = Array.isArray(ct.orders) ? ct.orders : [];
+        }
+      });
+    }
+
+    setSyncStatus('ok');
+    if (D.user) render();
+  })
+  .catch(function(err) {
+    console.warn("Cloud load error:", err.message);
+    setSyncStatus('error');
+  });
+}
+
+/**
+ * ส่งข้อมูลทั้งหมดไปบันทึกใน Google Sheets
+ * ✅ แก้ไข: ใช้ no-cors สำหรับ POST (Apps Script รับได้ แต่ response จะเป็น opaque)
+ */
+function syncToSheets(newHistoryItem) {
+  if (!SCRIPT_URL) return;
+  setSyncStatus('loading');
+
+  var payload = {
+    action: "syncAll",
+    data: {
+      tables:     D.tables,
+      members:    D.members,
+      menu:       D.menu,
+      rate:       D.rate,
+      discounts:  D.discounts,
+      newHistory: newHistoryItem ? [newHistoryItem] : []
+    }
+  };
+
+  // ✅ POST แบบ no-cors — response เป็น opaque แต่ข้อมูลถึง Apps Script แน่นอน
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    mode:   "no-cors",
+    headers: { "Content-Type": "text/plain" },  // ✅ ต้องเป็น text/plain ไม่ใช่ application/json เพราะ no-cors
+    body: JSON.stringify(payload)
+  })
+  .then(function() {
+    setSyncStatus('ok');
+  })
+  .catch(function(err) {
+    console.warn("Sync error:", err.message);
+    setSyncStatus('error');
+  });
+}
+
+function setSyncStatus(status) {
+  D.syncStatus = status;
+  var dot  = document.getElementById('syncDot');
+  var text = document.getElementById('syncStatusText');
+  if (!dot || !text) return;
+
+  var states = {
+    loading: { dot: 'loading', msg: '⏳ กำลังซิงค์ข้อมูลกับ Google Sheets...' },
+    ok:      { dot: '',        msg: '✅ ซิงค์ข้อมูลกับ Google Sheets สำเร็จ'  },
+    error:   { dot: 'error',   msg: '⚠️ ออฟไลน์ — บันทึกข้อมูลในเครื่องไว้ก่อน' },
+    idle:    { dot: '',        msg: '🔄 กำลังตรวจสอบคลาวด์...' },
+  };
+
+  var s = states[status] || states.idle;
+  dot.className  = 'sync-dot' + (s.dot ? ' ' + s.dot : '');
+  text.textContent = s.msg;
+}
+
+// ====================================================
+// 🛠️ HELPERS
+// ====================================================
+var LEVELS = {walkin:'ขาจร', regular:'ขาประจำ', vip:'VIP', supervip:'Super VIP', admin:'Admin', staff:'Staff'};
+var BADGE  = {walkin:'mb-walkin', regular:'mb-regular', vip:'mb-vip', supervip:'mb-supervip', admin:'mb-admin', staff:'mb-walkin'};
+
+function mbBadge(lv) { return '<span class="mb ' + BADGE[lv] + '">' + (LEVELS[lv]||lv) + '</span>'; }
+function getMember(id) { return D.members.find(function(m){return m.id==id;}) || D.members[0]; }
+function elapsed(start) { return start ? Math.floor((Date.now() - start) / 1000) : 0; }
+function fmt(s) {
+  var h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  return pad(h)+':'+pad(m)+':'+pad(sec);
+}
+function pad(n) { return n < 10 ? '0'+n : String(n); }
+function calcAmt(start) { return Math.ceil(elapsed(start) / 3600 * D.rate); }
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (t) { t.textContent = msg; t.style.display = 'block'; setTimeout(function(){ t.style.display='none'; }, 2500); }
+}
+
+// ====================================================
+// 🎨 RENDER ENGINE
+// ====================================================
+function render() {
+  var r = document.getElementById('root');
+  if (!r) return;
+  if (!D.user) { r.innerHTML = loginHTML(); bindLogin(); return; }
+  r.innerHTML = appHTML();
+  bindApp();
+  startTimer();
+}
+
+function loginHTML() {
+  return '<div class="login-screen">'+
+    '<div class="login-logo">🎱</div>'+
+    '<div class="login-title">🎱 LUCKY SNOOKER CLUB 🎱</div>'+
+    '<div class="login-sub">ระบบควบคุมและคิดเงินร้านสนุ๊กเกอร์</div>'+
+    '<div class="login-card">'+
+      '<div class="form-group"><label class="form-label">ชื่อผู้ใช้ระบบ</label>'+
+      '<input class="form-input" id="lu" type="text" placeholder="username" autocomplete="username"></div>'+
+      '<div class="form-group"><label class="form-label">รหัสผ่าน</label>'+
+      '<input class="form-input" id="lp" type="password" placeholder="password" autocomplete="current-password"></div>'+
+      '<button class="btn-primary" id="btnLogin">เข้าสู่ระบบ</button>'+
+      '<div class="login-error" id="lerr"></div>'+
+    '</div>'+
+  '</div>';
+}
+
+function bindLogin() {
+  document.getElementById('btnLogin').onclick = doLogin;
+  document.getElementById('lp').onkeydown = function(e){ if(e.key==='Enter') doLogin(); };
+}
+
+function doLogin() {
+  var u = document.getElementById('lu').value.trim();
+  var p = document.getElementById('lp').value.trim();
+  var found = D.users.find(function(x){ return x.username===u && x.password===p; });
+  if (found) {
+    D.user = found;
+    showToast("👋 ยินดีต้อนรับคุณ " + found.name);
+    render();
+    loadDataFromSheets(); // ✅ โหลดข้อมูลคลาวด์หลัง login
+  } else {
+    document.getElementById('lerr').textContent = '❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+  }
+}
+
+function appHTML() {
+  return '<div class="app-screen">'+
+    navbarHTML()+
+    '<div class="page-content">'+pageHTML()+'</div>'+
+    (D.modal ? modalHTML() : '')+
+    tabbarHTML()+
+  '</div>';
+}
+
+function navbarHTML() {
+  return '<div class="navbar">'+
+    '<div class="navbar-title">🎱 LUCKY SNOOKER</div>'+
+    '<div class="navbar-user">'+
+      '<b>'+D.user.name+'</b>'+
+      mbBadge(D.user.role)+' '+
+      '<button class="logout-btn" id="btnLogout">ออกระบบ</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function tabbarHTML() {
+  var tabs = [
+    {id:'tables',  ic:'🎱', lb:'โต๊ะสนุ๊ก'},
+    {id:'members', ic:'👥', lb:'สมาชิก'},
+    {id:'history', ic:'📋', lb:'ประวัติร้าน'},
+    {id:'settings',ic:'⚙️', lb:'ตั้งค่า'},
+  ];
+  return '<div class="tabbar">'+tabs.map(function(t){
+    return '<button class="tab-item'+(D.page===t.id?' active':'')+'" data-tab="'+t.id+'">'+
+      '<span class="tab-icon">'+t.ic+'</span><span>'+t.lb+'</span></button>';
+  }).join('')+'</div>';
+}
+
+function pageHTML() {
+  if(D.page==='tables')   return tablesPage();
+  if(D.page==='members')  return membersPage();
+  if(D.page==='history')  return historyPage();
+  if(D.page==='settings') return settingsPage();
+  return '';
+}
+
+// ===== PAGES =====
+function tablesPage() {
+  var active = D.tables.filter(function(t){ return t.status==='active'; }).length;
+  var addBtn = D.user.role==='admin' ? '<button class="btn-sm" id="btnAddTable">+ เพิ่มโต๊ะ</button>' : '';
+  var cards = D.tables.map(function(t){
+    var m  = getMember(t.memberId);
+    var el = elapsed(t.start);
+    var inner = t.status==='active'
+      ? ('<div class="table-timer" id="timer-'+t.id+'">'+fmt(el)+'</div>'+
+         '<div class="table-amount" id="amt-'+t.id+'">฿'+calcAmt(t.start)+'</div>'+
+         '<div class="table-info" style="margin-top:3px">'+m.name+'</div>'+
+         mbBadge(m.level))
+      : '<div class="table-info">แตะเพื่อเปิดโต๊ะ</div>';
+    return '<div class="table-card '+t.status+'" data-tid="'+t.id+'">'+
+      '<div class="table-name">'+t.name+'</div>'+
+      '<div class="status-badge '+(t.status==='active'?'badge-active':'badge-vacant')+'">'+
+        (t.status==='active'?'● กำลังใช้':'○ ว่าง')+'</div>'+
+      inner+'</div>';
+  }).join('');
+
+  return '<div class="sync-bar"><div class="sync-dot" id="syncDot"></div><span id="syncStatusText">🔄 กำลังตรวจสอบคลาวด์...</span></div>'+
+    '<div class="section-header"><div class="section-title">โต๊ะทั้งหมด ('+active+'/'+D.tables.length+')</div>'+addBtn+'</div>'+
+    '<div class="tables-grid">'+cards+'</div>';
+}
+
+function membersPage() {
+  var addBtn = D.user.role==='admin' ? '<button class="btn-sm" id="btnAddMember">+ เพิ่มสมาชิก</button>' : '';
+  var list = D.members.map(function(m){
+    var editBtn = D.user.role==='admin'
+      ? '<button class="btn-sm" style="font-size:11px;padding:5px 9px" data-editm="'+m.id+'">แก้ไข</button>' : '';
+    return '<div class="list-item"><div class="avatar">👤</div><div class="li-info">'+
+      '<div class="li-name">'+m.name+'</div>'+
+      '<div class="li-sub">'+(m.phone||'ไม่มีเบอร์โทร')+' · ใช้บริการ '+m.visits+' ครั้ง</div>'+
+      '<div style="margin-top:4px">'+mbBadge(m.level)+'</div></div>'+editBtn+'</div>';
+  }).join('');
+  return '<div class="section-header"><div class="section-title">สมาชิกทั้งหมด</div>'+addBtn+'</div>'+list;
+}
+
+function historyPage() {
+  var list = [...D.history].reverse().map(function(h){
+    return '<div class="hist-card">'+
+      '<div class="hist-head">'+
+        '<div><b style="font-size:13px">'+h.tname+' · '+h.date+'</b>'+
+        '<div style="font-size:11px;color:var(--text-muted)">'+h.start+'–'+h.end+' ('+h.mins+' นาที) · '+h.mname+' '+mbBadge(h.level)+'</div></div>'+
+        '<div class="hist-amt">฿'+h.total+'</div>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--text-muted)">โต๊ะ ฿'+h.tamt+' + ขนมน้ำ ฿'+h.famt+' − ลด '+h.disc+'%</div>'+
+    '</div>';
+  }).join('');
+  return '<div class="section-header"><div class="section-title">ประวัติการรับเงิน</div></div>'+
+    (list || '<div class="empty">ยังไม่มีประวัติ</div>');
+}
+
+function settingsPage() {
+  var isAdmin = D.user.role==='admin';
+  var warn = !isAdmin ? '<div style="color:var(--red);font-size:13px;margin-bottom:12px;padding:10px;background:rgba(226,75,74,0.1);border-radius:8px">⚠️ สิทธิ์ Admin เท่านั้น</div>' : '';
+  var menuRows = D.menu.map(function(m){
+    var del = isAdmin ? '<button class="btn-sm btn-danger" style="padding:4px 8px;font-size:11px" data-delmenu="'+m.id+'">ลบ</button>' : '';
+    return '<div class="set-row"><span>'+(m.cat==='drink'?'🥤':'🍿')+' '+m.name+'</span>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+      '<input class="set-input" data-menuprice="'+m.id+'" type="number" value="'+m.price+'"'+(isAdmin?'':' disabled')+'>'+del+'</div></div>';
+  }).join('');
+  var addMenu = isAdmin
+    ? '<div class="set-row">'+
+        '<input class="set-input" id="nmName" style="width:100px;text-align:left" placeholder="ชื่อสินค้า">'+
+        '<div style="display:flex;gap:4px">'+
+          '<input class="set-input" id="nmPrice" type="number" placeholder="ราคา" style="width:65px">'+
+          '<button class="btn-sm" id="btnAddMenu">+</button>'+
+        '</div></div>' : '';
+  var discRows = Object.keys(D.discounts).map(function(lv){
+    return '<div class="set-row">'+mbBadge(lv)+' '+LEVELS[lv]+
+      '<input class="set-input" data-disc="'+lv+'" type="number" min="0" max="100" value="'+D.discounts[lv]+'"'+(isAdmin?'':' disabled')+'></div>';
+  }).join('');
+  var saveBtn = isAdmin
+    ? '<button class="btn-primary" id="btnSave" style="margin-top:8px">💾 บันทึกและซิงค์ลง Google Sheets</button>' : '';
+
+  return warn+
+    '<div class="set-group"><div class="set-title">อัตราค่าบริการ</div>'+
+    '<div class="set-row">ค่าโต๊ะ (บาท/ชั่วโมง) <input class="set-input" id="setRate" type="number" value="'+D.rate+'"'+(isAdmin?'':' disabled')+'></div></div>'+
+    '<div class="set-group"><div class="set-title">ส่วนลดตามระดับสมาชิก</div>'+discRows+'</div>'+
+    '<div class="set-group"><div class="set-title">เมนูเครื่องดื่มและอาหาร</div>'+menuRows+addMenu+'</div>'+
+    saveBtn;
+}
+
+// ====================================================
+// 🪟 MODAL
+// ====================================================
+function modalHTML() {
+  var m = D.modal;
+  if(m.type==='table')      return tableModalHTML(m.tid);
+  if(m.type==='checkout')   return checkoutModalHTML(m.tid);
+  if(m.type==='addtable')   return addTableModalHTML();
+  if(m.type==='addmember')  return addMemberModalHTML();
+  if(m.type==='editmember') return editMemberModalHTML(m.mid);
+  return '';
+}
+
+function wrapModal(title, body) {
+  return '<div class="modal-bg" id="mbg"><div class="modal-box">'+
+    '<div class="modal-handle"></div>'+
+    '<button class="modal-close" id="mclose">✕</button>'+
+    '<div class="modal-title">'+title+'</div>'+
+    body+'</div></div>';
+}
+
+function addTableModalHTML() {
+  return wrapModal('เพิ่มโต๊ะใหม่',
+    '<div class="form-group"><label class="form-label">ชื่อโต๊ะ</label>'+
+    '<input class="form-input" id="ntName" placeholder="เช่น โต๊ะ 5"></div>'+
+    '<button class="btn-primary" id="btnConfirmTable">ยืนยัน</button>');
+}
+
+function addMemberModalHTML() {
+  return wrapModal('เพิ่มสมาชิกใหม่',
+    '<div class="form-group"><label class="form-label">ชื่อ-นามสกุล</label>'+
+    '<input class="form-input" id="nmName2" placeholder="กรอกชื่อ"></div>'+
+    '<div class="form-group"><label class="form-label">เบอร์โทร</label>'+
+    '<input class="form-input" id="nmPhone" type="tel" placeholder="08x-xxxxxxx"></div>'+
+    '<div class="form-group"><label class="form-label">ระดับสมาชิก</label>'+
+    '<select class="form-input" id="nmLevel">'+
+      '<option value="walkin">ขาจร</option>'+
+      '<option value="regular">ขาประจำ</option>'+
+      '<option value="vip">VIP</option>'+
+      '<option value="supervip">Super VIP</option>'+
+    '</select></div>'+
+    '<button class="btn-primary" id="btnConfirmMember">บันทึก</button>');
+}
+
+function editMemberModalHTML(mid) {
+  var em = getMember(mid);
+  return wrapModal('แก้ไขข้อมูลสมาชิก',
+    '<div class="form-group"><label class="form-label">ชื่อ</label>'+
+    '<input class="form-input" id="emName" value="'+em.name+'"></div>'+
+    '<div class="form-group"><label class="form-label">เบอร์โทร</label>'+
+    '<input class="form-input" id="emPhone" value="'+(em.phone||'')+'"></div>'+
+    '<div class="form-group"><label class="form-label">ระดับสมาชิก</label>'+
+    '<select class="form-input" id="emLevel">'+
+      ['walkin','regular','vip','supervip'].map(function(lv){
+        return '<option value="'+lv+'"'+(em.level===lv?' selected':'')+'>'+LEVELS[lv]+'</option>';
+      }).join('')+
+    '</select></div>'+
+    '<button class="btn-primary" id="btnConfirmEdit" data-mid="'+mid+'">บันทึก</button>');
+}
+
+function tableModalHTML(tid) {
+  var t  = D.tables.find(function(x){ return x.id===tid; });
+  var m  = getMember(t.memberId);
+  var el = elapsed(t.start);
+  var drinks = D.menu.filter(function(x){ return x.cat==='drink'; });
+  var snacks = D.menu.filter(function(x){ return x.cat==='snack'; });
+  var fTotal = t.orders.reduce(function(s,o){ return s+o.price*o.qty; }, 0);
+
+  var body = t.status==='vacant'
+    ? ('<div class="form-group"><label class="form-label">เลือกสมาชิก</label>'+
+       '<select class="form-input" id="selMember">'+
+       D.members.map(function(mb){ return '<option value="'+mb.id+'">'+mb.name+' ('+LEVELS[mb.level]+')</option>'; }).join('')+
+       '</select></div>'+
+       '<button class="btn-primary" id="btnOpen">▶ เปิดโต๊ะ</button>')
+    : ('<div class="info-row"><span class="info-label">ผู้จองโต๊ะ</span><span class="info-value">'+m.name+' '+mbBadge(m.level)+'</span></div>'+
+       '<div class="info-row"><span class="info-label">เวลาสะสม</span><span class="info-value" id="mtimer">'+fmt(el)+'</span></div>'+
+       '<div class="info-row"><span class="info-label">ค่าโต๊ะ</span><span class="info-value" id="mamt">฿'+calcAmt(t.start)+'</span></div>'+
+       '<div style="margin:10px 0 4px;font-size:13px;font-weight:600">🥤 เครื่องดื่ม</div>'+
+       '<div class="menu-grid">'+drinks.map(function(x){
+         return '<div class="menu-item" data-addorder="'+x.id+'"><div class="menu-item-name">'+x.name+'</div><div class="menu-item-price">฿'+x.price+'</div></div>';
+       }).join('')+'</div>'+
+       '<div style="margin:6px 0 4px;font-size:13px;font-weight:600">🍿 อาหาร</div>'+
+       '<div class="menu-grid">'+snacks.map(function(x){
+         return '<div class="menu-item" data-addorder="'+x.id+'"><div class="menu-item-name">'+x.name+'</div><div class="menu-item-price">฿'+x.price+'</div></div>';
+       }).join('')+'</div>'+
+       (t.orders.length
+         ? '<div class="order-list">'+
+             t.orders.map(function(o,i){
+               return '<div class="order-row"><span>'+o.name+' x'+o.qty+'</span>'+
+                 '<span>฿'+(o.price*o.qty)+'<button class="btn-remove" data-rmorder="'+i+'">✕</button></span></div>';
+             }).join('')+
+             '<div class="order-row" style="border-top:1px solid var(--border);padding-top:6px;font-weight:600">'+
+             '<span>รวมอาหาร/น้ำ</span><span>฿'+fTotal+'</span></div></div>'
+         : '')+
+       '<div class="btn-row"><button class="btn-primary btn-danger" style="padding:11px" id="btnCheckout">⏹ ปิดโต๊ะ/คิดเงิน</button></div>');
+
+  return wrapModal('ควบคุม: '+t.name, body);
+}
+
+function checkoutModalHTML(tid) {
+  var t      = D.tables.find(function(x){ return x.id===tid; });
+  var m      = getMember(t.memberId);
+  var el     = elapsed(t.start);
+  var tamt   = calcAmt(t.start);
+  var famt   = t.orders.reduce(function(s,o){ return s+o.price*o.qty; }, 0);
+  var disc   = D.discounts[m.level] || 0;
+  var sub    = tamt + famt;
+  var discAmt= Math.round(sub * disc / 100);
+  var total  = sub - discAmt;
+  var mins   = Math.round(el / 60);
+
+  return wrapModal('💳 ชำระเงิน — '+t.name,
+    '<div class="summary-box">'+
+      '<div class="sum-row"><span>ค่าโต๊ะ ('+mins+' นาที)</span><span>฿'+tamt+'</span></div>'+
+      '<div class="sum-row"><span>ค่าอาหาร/น้ำ</span><span>฿'+famt+'</span></div>'+
+      '<div class="sum-row"><span>ส่วนลด '+disc+'%</span><span style="color:var(--red)">−฿'+discAmt+'</span></div>'+
+      '<div style="border-top:1px solid var(--border);margin:8px 0"></div>'+
+      '<div class="sum-row"><span class="sum-total">ยอดสุทธิ</span><span class="sum-total" style="color:#5dca9f">฿'+total+'</span></div>'+
+    '</div>'+
+    '<button class="btn-primary" id="btnConfirmCheckout" '+
+      'data-tid="'+tid+'" data-total="'+total+'" data-tamt="'+tamt+'" '+
+      'data-famt="'+famt+'" data-disc="'+disc+'" data-mins="'+mins+'">'+
+      '✅ ยืนยันรับเงิน & บันทึกลง Google Sheets'+
+    '</button>');
+}
+
+// ====================================================
+// 🔗 EVENT BINDING
+// ====================================================
+function bindApp() {
+  var bl = document.getElementById('btnLogout');
+  if(bl) bl.onclick = function(){ D.user=null; D.modal=null; if(D.timerID)clearInterval(D.timerID); render(); };
+
+  document.querySelectorAll('[data-tab]').forEach(function(el){
+    el.onclick = function(){
+      D.page = el.dataset.tab;
+      render();
+      loadDataFromSheets(); // ✅ รีเฟรชทุกครั้งที่สลับแท็บ
+    };
+  });
+
+  document.querySelectorAll('[data-tid]').forEach(function(el){
+    el.onclick = function(){ D.modal={type:'table', tid:parseInt(el.dataset.tid)}; render(); bindModal(); };
+  });
+
+  var bat = document.getElementById('btnAddTable');
+  if(bat) bat.onclick = function(){ D.modal={type:'addtable'}; render(); bindModal(); };
+
+  var bam = document.getElementById('btnAddMember');
+  if(bam) bam.onclick = function(){ D.modal={type:'addmember'}; render(); bindModal(); };
+
+  document.querySelectorAll('[data-editm]').forEach(function(el){
+    el.onclick = function(){ D.modal={type:'editmember', mid:parseInt(el.dataset.editm)}; render(); bindModal(); };
+  });
+
+  var bs = document.getElementById('btnSave');      if(bs)  bs.onclick  = saveSettings;
+  var bam2= document.getElementById('btnAddMenu');  if(bam2)bam2.onclick = addMenuItem;
+
+  document.querySelectorAll('[data-delmenu]').forEach(function(el){
+    el.onclick = function(){
+      D.menu = D.menu.filter(function(x){ return x.id !== parseInt(el.dataset.delmenu); });
+      render(); syncToSheets();
+    };
+  });
+}
+
+function bindModal() {
+  var mc  = document.getElementById('mclose'); if(mc)  mc.onclick  = closeModal;
+  var mbg = document.getElementById('mbg');    if(mbg) mbg.onclick = function(e){ if(e.target===mbg) closeModal(); };
+
+  // เปิดโต๊ะ
+  var bo = document.getElementById('btnOpen');
+  if(bo) bo.onclick = function(){
+    var sel = document.getElementById('selMember');
+    var t = D.tables.find(function(x){ return x.id===D.modal.tid; });
+    t.status='active'; t.start=Date.now(); t.memberId=parseInt(sel.value); t.orders=[];
+    D.modal = null;
+    render(); syncToSheets(); startTimer();
+  };
+
+  // ไปหน้า checkout
+  var bc = document.getElementById('btnCheckout');
+  if(bc) bc.onclick = function(){ D.modal={type:'checkout', tid:D.modal.tid}; render(); bindModal(); };
+
+  // ยืนยันชำระเงิน
+  var bcc = document.getElementById('btnConfirmCheckout');
+  if(bcc) bcc.onclick = function(){
+    var tid   = parseInt(this.dataset.tid);
+    var t     = D.tables.find(function(x){ return x.id===tid; });
+    var mb    = getMember(t.memberId);
+    var now   = new Date();
+    var ds    = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear();
+    var ts    = pad(now.getHours())+':'+pad(now.getMinutes());
+
+    var newHist = {
+      id:    Date.now(),
+      tname: t.name,
+      mname: mb.name,
+      level: mb.level,
+      date:  ds,
+      start: 'เปิดบิล',
+      end:   ts,
+      mins:  parseInt(this.dataset.mins),
+      tamt:  parseInt(this.dataset.tamt),
+      famt:  parseInt(this.dataset.famt),
+      disc:  parseInt(this.dataset.disc),
+      total: parseInt(this.dataset.total),
+    };
+
+    D.history.push(newHist);
+    mb.visits++;
+    t.status='vacant'; t.start=null; t.orders=[];
+    D.modal=null; D.page='tables';
+    showToast("💵 ชำระเงินเรียบร้อย ฿" + newHist.total);
+    render();
+    syncToSheets(newHist); // ✅ ส่ง history ใหม่ไปด้วย
+  };
+
+  // เพิ่ม order
+  document.querySelectorAll('[data-addorder]').forEach(function(el){
+    el.onclick = function(){
+      var mid   = parseInt(el.dataset.addorder);
+      var mitem = D.menu.find(function(x){ return x.id===mid; });
+      var t     = D.tables.find(function(x){ return x.id===D.modal.tid; });
+      var o     = t.orders.find(function(x){ return x.id===mid; });
+      if(o) { o.qty++; } else { t.orders.push({id:mitem.id, name:mitem.name, price:mitem.price, qty:1}); }
+      render(); bindModal(); syncToSheets();
+    };
+  });
+
+  // ลบ order
+  document.querySelectorAll('[data-rmorder]').forEach(function(el){
+    el.onclick = function(){
+      var t = D.tables.find(function(x){ return x.id===D.modal.tid; });
+      t.orders.splice(parseInt(el.dataset.rmorder), 1);
+      render(); bindModal(); syncToSheets();
+    };
+  });
+
+  // เพิ่มโต๊ะใหม่
+  var bct = document.getElementById('btnConfirmTable');
+  if(bct) bct.onclick = function(){
+    var n = document.getElementById('ntName').value.trim(); if(!n) return;
+    D.tables.push({id:Date.now(), name:n, status:'vacant', start:null, memberId:1, orders:[]});
+    D.modal=null; render(); syncToSheets();
+    showToast("🎱 เพิ่ม " + n + " เรียบร้อย");
+  };
+
+  // เพิ่มสมาชิก
+  var bcm = document.getElementById('btnConfirmMember');
+  if(bcm) bcm.onclick = function(){
+    var name  = document.getElementById('nmName2').value.trim(); if(!name) return;
+    var phone = document.getElementById('nmPhone').value.trim();
+    var level = document.getElementById('nmLevel').value;
+    D.members.push({id:Date.now(), name:name, phone:phone, level:level, visits:0});
+    D.modal=null; render(); syncToSheets();
+    showToast("👥 เพิ่มสมาชิก " + name + " เรียบร้อย");
+  };
+
+  // แก้ไขสมาชิก
+  var bce = document.getElementById('btnConfirmEdit');
+  if(bce) bce.onclick = function(){
+    var mid = parseInt(this.dataset.mid);
+    var m   = getMember(mid);
+    m.name  = document.getElementById('emName').value.trim();
+    m.phone = document.getElementById('emPhone').value.trim();
+    m.level = document.getElementById('emLevel').value;
+    D.modal=null; render(); syncToSheets();
+    showToast("✏️ แก้ไขข้อมูลเรียบร้อย");
+  };
+}
+
+function closeModal() { D.modal=null; render(); }
+
+// ====================================================
+// ⚙️ SETTINGS ACTIONS
+// ====================================================
+function saveSettings() {
+  D.rate = parseInt(document.getElementById('setRate').value) || 120;
+  Object.keys(D.discounts).forEach(function(lv){
+    var inp = document.querySelector('[data-disc="'+lv+'"]');
+    if(inp) D.discounts[lv] = parseInt(inp.value) || 0;
+  });
+  D.menu.forEach(function(m){
+    var inp = document.querySelector('[data-menuprice="'+m.id+'"]');
+    if(inp) m.price = parseInt(inp.value) || 0;
+  });
+  showToast("💾 บันทึกและซิงค์คลาวด์เรียบร้อย");
+  render();
+  syncToSheets();
+}
+
+function addMenuItem() {
+  var n = document.getElementById('nmName').value.trim();
+  var p = parseInt(document.getElementById('nmPrice').value) || 0;
+  if(!n) return;
+  D.menu.push({id:Date.now(), name:n, price:p, cat:'snack'});
+  render(); syncToSheets();
+}
+
+// ====================================================
+// ⏱️ TIMER
+// ====================================================
+function startTimer() {
+  if(D.timerID) clearInterval(D.timerID);
+  var active = D.tables.filter(function(t){ return t.status==='active'; });
+  if(!active.length) return;
+
+  D.timerID = setInterval(function(){
+    D.tables.forEach(function(t){
+      if(t.status!=='active') return;
+      var el   = elapsed(t.start);
+      var tEl  = document.getElementById('timer-'+t.id);
+      var tAmt = document.getElementById('amt-'+t.id);
+      if(tEl)  tEl.textContent  = fmt(el);
+      if(tAmt) tAmt.textContent = '฿'+calcAmt(t.start);
+      if(D.modal && D.modal.type==='table' && D.modal.tid===t.id){
+        var mTimer = document.getElementById('mtimer');
+        var mAmt   = document.getElementById('mamt');
+        if(mTimer) mTimer.textContent = fmt(el);
+        if(mAmt)   mAmt.textContent   = '฿'+calcAmt(t.start);
+      }
+    });
+  }, 1000);
+}
+
+// 🚀 Start
+render();
+</script>
+</body>
+</html>
